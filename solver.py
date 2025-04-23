@@ -25,7 +25,7 @@ def solve(matrix):
     dist[s] = sum(matrix[p[i]][p[i-1]] for i in range(len(p)))
     q = []
     heapq.heappush(q,(0,s))
-    
+    visited = defaultdict(bool)
     min_cost = math.inf
     while q:
 
@@ -39,6 +39,8 @@ def solve(matrix):
         if min_cost > dist[u]:
             min_cost = dist[u]
             min_path = path  
+        if visited[u]:
+            visited[u] = False
         for i in range(n-2):
             for j in range(i+1,n-1):
                 a = path[i-1]
@@ -58,6 +60,9 @@ def solve(matrix):
                         new_path.append(path[k])
                     tour[a,b,c,d] = new_path
                     dist[a,b,c,d] = alt_cost
+                    if visited[a,b,c,d]:
+                        continue
+                    visited[a,b,c,d] = True
                     heapq.heappush(q,(height + 1, (a,b,c,d)))
                  
     return min_cost,min_path
