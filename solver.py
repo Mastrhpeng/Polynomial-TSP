@@ -1,13 +1,12 @@
-import heapq
+
 from collections import defaultdict
 import math
-
-
-
+import random
+import heapq
 def solve(matrix):
     """
-    TSP polynomial solver, average case of O(n^4),
-    and in worst case O(n^9log(n)) time and O(n^5) space
+    TSP polynomial solver, average case of O(n^3log(n)),
+    and in worst case O(n^5log(n)) time and O(n^3) space
     input:
         matrix - 2d array of non-negative integers
     outputs:
@@ -20,49 +19,79 @@ def solve(matrix):
 
     dist = defaultdict(lambda : math.inf)
     tour = defaultdict(tuple)
-    s = p[-1],p[0],p[1],p[2]
+    s = p[0], p[-1]
     tour[s] = p
-    dist[s] = sum(matrix[p[i]][p[i-1]] for i in range(len(p)))
+    dist[s] = sum(matrix[p[i]][p[i-1]] for i in range(1,len(p)))
     q = []
-    heapq.heappush(q,(0,s))
+    heapq.heappush(q,(dist[s],s))
     visited = defaultdict(bool)
     min_cost = math.inf
     while q:
 
-        height,u = heapq.heappop(q)
+        _,u = heapq.heappop(q)
         
         path = tour[u]
-        
-        if height > n - 1:
-            break
         cost = dist[u]
-        if min_cost > dist[u]:
-            min_cost = dist[u]
-            min_path = path  
-        if visited[u]:
-            visited[u] = False
-        for i in range(n-2):
-            for j in range(i+1,n-1):
-                a = path[i-1]
-                b = path[i]
-                c = path[j]
-                d = path[j+1]
-                old_edge_cost = matrix[a][b] + matrix[c][d]
-                new_edge_cost = matrix[a][c] + matrix[b][d]
-                alt_cost = cost - old_edge_cost + new_edge_cost
-                if alt_cost < dist[a,b,c,d]:
-                    new_path = []
-                    for k in range(i):
-                        new_path.append(path[k])
-                    for k in range(j,i-1, -1):
-                        new_path.append(path[k])
-                    for k in range(j+1,n):
-                        new_path.append(path[k])
-                    tour[a,b,c,d] = new_path
-                    dist[a,b,c,d] = alt_cost
-                    if visited[a,b,c,d]:
-                        continue
-                    visited[a,b,c,d] = True
-                    heapq.heappush(q,(height + 1, (a,b,c,d)))
-                 
+        
+        visited[u] = False
+        
+        for i in range(1,n):
+            a = path[i-1]
+            b = path[i]
+            old_edge_cost = matrix[a][b] 
+            new_edge_cost = matrix[a][u[1]]
+            alt_cost = cost - old_edge_cost + new_edge_cost
+            v= u[0],b
+            if alt_cost < dist[v]:
+                new_path = path[:i] + path[i:][::-1]
+                tour[v] = new_path
+                dist[v] = alt_cost
+                if visited[v]:
+                    continue
+                visited[v] = True
+                
+                heapq.heappush(q,(dist[v], (v)))
+            
+            old_edge_cost = matrix[a][b] 
+            new_edge_cost = matrix[b][u[0]]
+            alt_cost = cost - old_edge_cost + new_edge_cost
+            v= a,u[1]
+            if alt_cost < dist[v]:
+                new_path = path[:i][::-1] + path[i:]
+                tour[v] = new_path
+                dist[v] = alt_cost
+                if visited[v]:
+                    continue
+                visited[v] = True
+                
+                heapq.heappush(q,(dist[v], (v)))
+    for u in dist:
+        if min_cost > dist[u] + matrix[u[0]][u[1]]:
+            min_cost = dist[u] + matrix[u[0]][u[1]]
+            min_path = tour[u]  
     return min_cost,min_path
+
+
+def generate_symmetric_matrix(size, max_value):
+    matrix = [[0] * size for _ in range(size)]
+
+    for i in range(size):
+        for j in range(i, size):
+            value = random.randint(1, max_value)
+            matrix[i][j] = value
+            matrix[j][i] = value  # ensure symmetry
+
+    return matrix
+
+if __name__ == "__main__":
+    import time
+    for i in range(3, 1000):
+        
+        matrix = generate_symmetric_matrix(i, 100)
+        s = time.time()
+        cp = solve(matrix)
+        print(time.time()-s, file = open('time.txt', "a"))
+        print(cp[0], file = open("result.txt", "a"))
+        print(matrix, file = open("matrix.txt", "a"))
+
+    
