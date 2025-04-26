@@ -9,7 +9,7 @@ def solve(matrix):
     TSP polynomial solver, average case of O(n^4),
     and in worst case O(n^9log(n)) time and O(n^5) space
     input:
-        matrix - 2d array of non-negative integers
+        matrix - 2d symmetric matrix of non-negative integers
     outputs:
         min_cost - minimum cost for minimum tour
         min_tour - minimum tour
